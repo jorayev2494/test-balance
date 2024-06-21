@@ -1,0 +1,393 @@
+openapi: 3.0.0
+info:
+  title: Transaction API
+  description: Optional multiline or single-line description in [CommonMark](http://commonmark.org/help/) or HTML.
+  version: 0.1.9
+servers:
+  - url: http://127.0.0.1:8011/api
+    description: Local server
+tags:
+  - name: Authentication
+  - name: Transaction
+  - name: Balance
+paths:
+  /auth/register:
+    post:
+      summary: 'Register'
+      tags:
+        - Authentication
+      requestBody:
+        $ref: '#/components/requestBodies/RegisterData'
+      responses:
+        201:
+          $ref: '#/components/responses/CreatedResponse'
+
+  /auth/login:
+    post:
+      summary: 'Login'
+      tags:
+        - Authentication
+      requestBody:
+        $ref: '#/components/requestBodies/LoginData'
+      responses:
+        200:
+          $ref: '#/components/responses/LoginResponse'
+
+  /auth/logout:
+    post:
+      summary: "Logout"
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        202:
+          $ref: '#/components/responses/AcceptedResponse'
+
+  /transactions:
+    get:
+      summary: "Index"
+      description: |
+        ## The below table defines the filter description and examples
+
+        **Filterable columns:** *title*, *income*, *amount*, *cost*, *created_at*
+
+        | Filter condition | SQL condition | Description                        | Example                            |
+        | ---------------- | --------------| -----------------------------------| -----------------------------------|
+        | eq               | =             | Equal to                           | filters[column][eq][]=3.0          |
+        | ne               | !=            | Not equal to                       | filters[column][ne][]=3.0          |
+        | lt               | <             | Less than                          | filters[column][lt][]=3.0          |
+        | gt               | >             | Greater than                       | filters[column][gt][]=3.0          |
+        | le               | <=            | Less than or equal                 | filters[column][le][]=3.0          |
+        | ge               | >=            | Greater than or equal              | filters[column][ge][]=3.0          |
+
+        **For example:** *filters[title][eq][]=Test&filters[amount][le][]=3.0*
+
+      tags:
+        - Transaction
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          example: 1
+      responses:
+        200:
+          $ref: '#/components/responses/TransactionIndexResponse'
+
+    post:
+      summary: 'Create'
+      tags:
+        - Transaction
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: '#/components/requestBodies/TransactionCreateData'
+      responses:
+        201:
+          $ref: '#/components/responses/TransactionCreatedResponse'
+
+  /transactions/{id}:
+    get:
+      summary: "Show"
+      tags:
+        - Transaction
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          example: 6
+      responses:
+        200:
+          $ref: '#/components/responses/TransactionShowResponse'
+
+    delete:
+      summary: "Delete"
+      tags:
+        - Transaction
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          example: 6
+      responses:
+        204:
+          $ref: '#/components/responses/NoContentResponse'
+
+  /balance/balance:
+    get:
+      summary: "Balance"
+      tags:
+        - Balance
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: start_date
+          example: "2024-06-20"
+        - in: query
+          name: end_date
+          example: "2024-06-1"
+      responses:
+        200:
+          $ref: '#/components/responses/BalanceResponse'
+
+components:
+  schemas:
+    Paginate:
+      type: object
+      properties:
+        current_page:
+          type: integer
+          example: 1
+        data:
+          type: array
+        first_page_url:
+          type: string
+          example: "http://127.0.0.1:8084/api/admin/products?page=1"
+        from:
+          type: integer
+          example: 1
+        last_page:
+          type: integer
+          example: 5
+        last_page_url:
+          type: string
+          example: "http://127.0.0.1:8084/api/admin/products?page=5"
+        links:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+                example: "http://127.0.0.1:8084/api/admin/products?page=1"
+              label:
+                type: string
+                example: "1"
+                enum:
+                  - "1"
+                  - "2"
+                  - "3"
+                  - "4"
+                  - "5"
+              active:
+                type: boolean
+                example: true
+                enum:
+                  - true
+                  - false
+        next_page_url:
+          type: string
+          example: "http://127.0.0.1:8084/api/admin/products?page=2"
+        path:
+          type: string
+          example: "http://127.0.0.1:8084/api/admin/products"
+        per_page:
+          type: integer
+          example: 15
+        prev_page_url:
+          type: string
+          example: "http://127.0.0.1:8084/api/admin/products?page=1"
+          nullable: true
+        to:
+          type: integer
+          example: 15
+        total:
+          type: integer
+          example: 55
+
+    AuthData:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        first_name:
+          type: string
+          example: "Alex"
+          nullable: true
+        last_name:
+          type: string
+          example: "Aleev"
+          nullable: true
+        email:
+          type: string
+          example: "alex@gmail.com"
+        last_seed:
+          type: string
+          example: "9 minutes ago"
+          nullable: true
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 6
+        title:
+          type: string
+          example: "Transaction title"
+        income:
+          type: number
+          example: 1.1
+          default: 0
+        amount:
+          type: number
+          example: 1.3
+          default: 0
+        cost:
+          type: number
+          example: 1.2
+          default: 0
+        created_at:
+          type: string
+          example: "18-06-2024 20:27:40"
+        updated_at:
+          type: string
+          example: "18-06-2024 20:27:40"
+
+    Balance:
+      type: object
+      properties:
+        income:
+          type: number
+          example: 12.1
+          default: 0
+        amount:
+          type: number
+          example: 14.3
+          default: 0
+        cost:
+          type: number
+          example: -12.2
+          default: 0
+
+
+  requestBodies:
+    RegisterData:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+                required: true,
+                example: 'alex@gmail.com'
+              password:
+                type: string
+                required: true,
+                example: '12345Pwd_'
+              password_confirmation:
+                type: string
+                required: true,
+                example: '12345Pwd_'
+
+    LoginData:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+                required: true,
+                example: 'alex@gmail.com'
+              password:
+                type: string
+                required: true,
+                example: '12345Pwd_'
+
+    TransactionCreateData:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                example: "New transaction title"
+                required: true
+              income:
+                type: number
+                example: 1.1
+                nullable: true
+              cost:
+                type: number
+                example: ""
+                nullable: true
+
+  responses:
+    NoContentResponse:
+      description: "No Content"
+
+    CreatedResponse:
+      description: "Created"
+
+    AcceptedResponse:
+      description: "Accepted"
+
+    LoginResponse:
+      description: 'Success'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              accessToken:
+                type: string
+                example: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMTEvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3MTg5NDA1MTQsImV4cCI6MTcxODk0NDExNCwibmJmIjoxNzE4OTQwNTE0LCJqdGkiOiJkNXYxRG5QZmdKc1Rkdk9zIiwic3ViIjoiMSIsInBydiI6IjIzYmQ1Yzg5NDlmNjAwYWRiMzllNzAxYzQwMDg3MmRiN2E1OTc2ZjcifQ.bV1qhmKsg9GmcpDtX84ux1D4GOX__MAE07VoBnLIhc0"
+              token_type:
+                type: string
+                example: "bearer"
+              expires_in:
+                type: number
+                example: 3600
+              auth_data:
+                allOf:
+                  - $ref: '#/components/schemas/AuthData'
+
+    TransactionIndexResponse:
+      description: "Index response"
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Paginate'
+              - properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Transaction'
+
+    TransactionCreatedResponse:
+      description: "Created transaction"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Transaction'
+
+    TransactionShowResponse:
+      description: "Show transaction"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Transaction'
+
+    BalanceResponse:
+      description: "Show balance"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Balance'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
