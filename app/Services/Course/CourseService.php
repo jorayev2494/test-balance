@@ -19,7 +19,7 @@ readonly class CourseService implements CourseServiceInterface
         /** @var CourseStrategyInterface $course */
         $course = \Cache::remember(
             "course-$courseType->value",
-            now()->addMinutes(10),
+            now()->addMinutes(config('course.cache_ttl_in_minutes')),
             static fn () => CourseDriverFactory::make($courseType)
         );
 
